@@ -3,7 +3,7 @@ const pool = require('../../config/database');
 module.exports = {
     create: (data, callBack) => {
         pool.query(
-            `INSERT INTO "user" (user_name,user_type, first_name, last_name, status, password, created_date, updated_date)
+            `INSERT INTO public."user" (user_name,user_type, first_name, last_name, status, password, created_date, updated_date)
                     values($1, $2, $3, $4, $5, $6, $7, $8)`,
             [
                 data.userName,

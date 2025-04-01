@@ -21,8 +21,8 @@ app.use("/api/resources", resourceRouter);
 app.use("/api/resource_categories", resourceCategoryRouter);
 app.use("/api/expense_categories", expenseCategoryRouter);
 
-const port = process.env.APP_PORT || 3000;
+const port = process.env.PORT || 3000;
 
 app.listen(port, () => {
-  console.log("Server is running on port", process.env.APP_PORT );
+  console.log("Server is running on port", process.env.PORT);
 });
