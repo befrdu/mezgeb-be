@@ -15,11 +15,11 @@ const expenseCategoryRouter = require('./api/expense_category/expense_category.c
 app.use(express.json());
 app.use(cors()); // Ensure cors middleware is used
 
-app.use("/api/users", userRouter);
-app.use("/api/expenses", expenseRouter);
-app.use("/api/resources", resourceRouter);
-app.use("/api/resource_categories", resourceCategoryRouter);
-app.use("/api/expense_categories", expenseCategoryRouter);
+app.use("/users", userRouter);
+app.use("/expenses", expenseRouter);
+app.use("/resources", resourceRouter);
+app.use("/resource_categories", resourceCategoryRouter);
+app.use("/expense_categories", expenseCategoryRouter);
 
 const port = process.env.PORT || 3000;
 
