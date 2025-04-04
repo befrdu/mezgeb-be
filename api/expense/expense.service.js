@@ -1,4 +1,4 @@
-const {createExpense, searchExpensesByCategory, searchExpensesByDate} = require('./expense.dao');
+const {createExpense, searchExpensesByCategory, searchExpensesByDate } = require('./expense.dao');
 
 module.exports = {
     createExpense: (req, res) => {
