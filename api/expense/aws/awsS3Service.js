@@ -1,60 +1,45 @@
-const AWS = require('aws-sdk');
 require('dotenv').config();
 
-AWS.config.update({
-    region: process.env.AWS_REGION
-});
+const { S3Client, PutObjectCommand, GetObjectCommand, getSignedUrl } = require('@aws-sdk/client-s3'); // Updated import
 
-const s3 = new AWS.S3();
+const awsRegion = process.env.AWS_REGION || 'us-east-2'; 
+
+const s3Client = new S3Client({ region: awsRegion }); 
+
 const bucketName = process.env.S3_BUCKET_NAME;
 
-async function uploadFileToS3(formData) {
-    if (!formData.file || !formData.fileName) {
-        throw new Error('File data or file name is missing');
-    }
-
-    const buffer = Buffer.from(formData.file, 'base64'); // Convert base64 file data to a buffer
+const uploadFileToS3 = async ({ file, fileName, contentType }) => {
     const params = {
         Bucket: bucketName,
-        Key: formData.fileName, // Use the file name from formData
-        Body: buffer,
-        ContentType: formData.contentType || 'application/octet-stream' // Use content type from formData or default
-       // ACL: 'public-read' // Adjust permissions if needed
+        Key: fileName,
+        Body: Buffer.from(file, 'base64'),
+        ContentType: contentType,
     };
 
-    try {
-        console.log(`Uploading file: ${formData.fileName}`);
-        const data = await s3.upload(params).promise();
-        console.log(`File uploaded successfully: ${data.Location}`);
-        return data.Location; // Return the S3 file location
-    } catch (error) {
-        console.error('Error uploading to S3:', error);
-        throw error;
-    }
-}
-
-async function downloadFromS3(fileKey) {
-    if (!fileKey) {
-        throw new Error('File key is missing');
-    }
-
-    const params = {
-        Bucket: bucketName,
-        Key: fileKey // The key of the file to download
-    };
-
-    try {
-        console.log(`Downloading file: ${fileKey}`);
-        const data = await s3.getObject(params).promise();
-        console.log(`File downloaded successfully`);
-        return data.Body; // Return the file content as a buffer
-    } catch (error) {
-        console.error('Error downloading from S3:', error);
-        throw error;
-    }
-}
-
-module.exports = {
-    uploadFileToS3: uploadFileToS3,
-    downloadFromS3: downloadFromS3
+    const command = new PutObjectCommand(params);
+    await s3Client.send(command);
+    return `https://${params.Bucket}.s3.${awsRegion}.amazonaws.com/${params.Key}`; // Use awsRegion directly
 };
+
+const downloadFromS3 = async (fileKey) => {
+    const params = {
+        Bucket: bucketName,
+        Key: fileKey,
+    };
+
+    const command = new GetObjectCommand(params);
+    const response = await s3Client.send(command);
+
+    // Convert the response body stream to a buffer
+    const streamToBuffer = async (stream) => {
+        const chunks = [];
+        for await (const chunk of stream) {
+            chunks.push(chunk);
+        }
+        return Buffer.concat(chunks);
+    };
+
+    return streamToBuffer(response.Body);
+};
+
+module.exports = { uploadFileToS3, downloadFromS3 };
