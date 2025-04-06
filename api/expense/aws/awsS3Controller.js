@@ -37,11 +37,12 @@ const upload = multer({ storage: storage });
  });
 
  router.post('/download', async (req, res) => {
-    const { fileKey } = req.body.fileName;
-    
-    console.log("receivied file to download", req);
+    console.log("receivied request", req.body);
+
+    const { fileKey } = req.body;
 
     if (!fileKey) {
+        console.error('File key is missing');
         return res.status(400).send('File key is required.');
     }
 
