@@ -9,6 +9,7 @@ const expenseRouter = require('./api/expense/expense.controller');
 const resourceRouter = require('./api/resource/resource.controller');
 const resourceCategoryRouter = require('./api/resource_category/resource_category.controller');
 const expenseCategoryRouter = require('./api/expense_category/expense_category.controller');
+const uploadFileToS3 = require('./api/expense/aws/awsS3Controller');
 
 //const {verify} = require('./api/middleware/auth');
 
@@ -20,6 +21,8 @@ app.use("/expenses", expenseRouter);
 app.use("/resources", resourceRouter);
 app.use("/resource_categories", resourceCategoryRouter);
 app.use("/expense_categories", expenseCategoryRouter);
+app.use("/file", uploadFileToS3);
+
 
 const port = process.env.PORT || 3000;
 

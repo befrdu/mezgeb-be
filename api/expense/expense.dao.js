@@ -3,8 +3,8 @@ const pool = require('../../config/database');
 module.exports = {  
     createExpense: (data, callBack) => {
         pool.query(
-            `INSERT INTO payment (category, payment_method, amount, payed_to, payment_date, created_by, description, other_details, receipt_file, receipt_file_name)
-                     values($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+            `INSERT INTO payment (category, payment_method, amount, payed_to, payment_date, created_by, description, other_details, receipt_file_url, receipt_file_name, receipt_file_size, receipt_file_type)
+                     values($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
             [
                 data.category,
                 data.paymentMethod,
@@ -14,8 +14,10 @@ module.exports = {
                 data.createdBy,
                 data.description,
                 data.otherDetails,
-                data.encodedReceiptFile || null, // Store file data if available
-                data.fileName || null  // Store file type if available
+                data.receiptUrl || null, // Store file data if available
+                data.receiptFileName || null,  // Store file type if available
+                data.receiptFileSize || null,  // Store file type if available,
+                data.receiptFileType || null  // Store file type if available
             ],
             (error, results, fields) => {
                 if (error) {

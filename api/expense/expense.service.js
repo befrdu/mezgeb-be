@@ -21,6 +21,11 @@ module.exports = {
 
     saveBulkExpense: (req, res) => {
         const expenses = req.body.expenses;
+
+        // expenses.forEach(expense => {
+        //     // Save the file to S3
+        //     module.exports.saveReceiptFileOnToS3(expense);
+        // });
      
         let successCount = 0;
 
@@ -82,5 +87,30 @@ module.exports = {
                 data: results
             });
         });
+    },
+
+    saveReceiptFileOnToS3(expense){
+        const { uploadFileToS3 } = require('./aws/awsS3Service');
+            if (expense.receiptFile) {
+                const fileName = `${expense.fileName}`;
+                const fileAsFormData = expense.receiptFileToUplaod; // Remove the metadata part
+
+                console.log(`Uploading file: ${fileName}`);
+                console.log(`Base64 string: ${fileAsFormData}`);
+
+                uploadFileToS3(fileAsFormData)
+                    .then((url) => {
+                        expense.s3FileLocation = url; // Update the expense object with the S3 URL
+                        console.log(`File uploaded successfully: ${url}`);
+                    })
+                    .catch((error) => {
+                        console.error(`Error uploading file: ${error}`);
+                    });
+            }
+            else {
+                console.log("No file to upload");
+            }
+        console.log("Expense data:", expense);
+
     }
 }
