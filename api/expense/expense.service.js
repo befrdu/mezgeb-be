@@ -21,11 +21,6 @@ module.exports = {
 
     saveBulkExpense: (req, res) => {
         const expenses = req.body.expenses;
-
-        // expenses.forEach(expense => {
-        //     // Save the file to S3
-        //     module.exports.saveReceiptFileOnToS3(expense);
-        // });
      
         let successCount = 0;
 

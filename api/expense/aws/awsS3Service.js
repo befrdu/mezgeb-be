@@ -8,10 +8,14 @@ const s3Client = new S3Client({ region: awsRegion });
 
 const bucketName = process.env.S3_BUCKET_NAME;
 
-const uploadFileToS3 = async ({ file, fileName, contentType }) => {
+const uploadFileToS3 = async ({ file, contentType, fileUniqueKey }) => {
+    if (!file) {
+        throw new Error('No file provided.');
+    }
+
     const params = {
         Bucket: bucketName,
-        Key: fileName,
+        Key: fileUniqueKey,
         Body: Buffer.from(file, 'base64'),
         ContentType: contentType,
     };
