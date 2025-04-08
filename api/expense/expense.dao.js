@@ -36,18 +36,18 @@ module.exports = {
     searchExpensesByCategory: (query, callBack) => {
         console.log(query);
 
-        let placeholders = query.category.map((_, index) => `$${index + 1}`).join(', ');
+        let placeholders = query.categories.map((_, index) => `$${index + 1}`).join(', ');
 
         let sqlQuery = `SELECT category, SUM(amount) FROM payment 
                         WHERE category IN (${placeholders}) 
-                        AND created_by = $${query.category.length + 1} 
-                        AND payment_date BETWEEN to_date($${query.category.length + 2}, 'YYYY-MM-DD') 
-                        AND to_date($${query.category.length + 3}, 'YYYY-MM-DD') 
+                        AND created_by = $${query.categories.length + 1} 
+                        AND payment_date BETWEEN to_date($${query.categories.length + 2}, 'YYYY-MM-DD') 
+                        AND to_date($${query.categories.length + 3}, 'YYYY-MM-DD') 
                         GROUP BY category;`;
 
         console.log('query', sqlQuery) ;              
 
-        let params = [...query.category, query.userName, query.fromDate, query.toDate];
+        let params = [...query.categories, query.userName, query.fromDate, query.toDate];
 
         console.log('params', params);
 
@@ -63,9 +63,15 @@ module.exports = {
     searchExpensesByDate: (query, callBack) => {
         let sqlQuery = `SELECT * FROM payment 
                         WHERE payment_date BETWEEN to_date($1, 'YYYY-MM-DD') AND to_date($2, 'YYYY-MM-DD')
-                        and created_by =$3`;
+                        AND created_by = $3`;
 
         let params = [query.fromDate, query.toDate, query.userName];
+
+        if (query.categories && query.categories.length > 0) {
+            let categoriesPlaceholder = query.categories.map((_, index) => `$${index + 4}`).join(', ');
+            sqlQuery += ` AND category IN (${categoriesPlaceholder})`;
+            params = [...params, ...query.categories];
+        }
 
         pool.query(sqlQuery, params, (error, results) => {
             if (error) {

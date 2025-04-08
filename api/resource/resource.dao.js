@@ -138,10 +138,10 @@ module.exports = {
 
         let params = [query.userName, query.fromDate, query.toDate];
 
-        if (query.category && query.category.length > 0) {
-            const placeholders = query.category.map((_, index) => `$${index + 4}`).join(', ');
+        if (query.category && query.categories.length > 0) {
+            const placeholders = query.categories.map((_, index) => `$${index + 4}`).join(', ');
             sqlQuery += ` AND category IN (${placeholders})`;
-            params = params.concat(query.category);
+            params = params.concat(query.categories);
         }
 
         sqlQuery += ` GROUP BY category;`;
@@ -157,15 +157,19 @@ module.exports = {
         });
     },
     searchResourcesByDate: (query, callBack) => {
-        let sqlQuery = `select *  from resource 
+        let sqlQuery = `select * from resource 
         where resource.created_by = $1 
-        and acquired_date between to_date($2, 'YYYY-MM-DD') and to_date($3, 'YYYY-MM-DD');`;
+        and acquired_date between to_date($2, 'YYYY-MM-DD') and to_date($3, 'YYYY-MM-DD')`;
 
-        let params = [];
+        let params = [query.userName, query.fromDate, query.toDate];
 
-        params.push(query.userName);
-        params.push(query.fromDate);
-        params.push(query.toDate);
+        if (query.categories && query.categories.length > 0) {
+            const placeholders = query.categories.map((_, index) => `$${index + 4}`).join(', ');
+            sqlQuery += ` AND category IN (${placeholders})`;
+            params = params.concat(query.categories);
+        }
+
+        sqlQuery += `;`;
 
         pool.query(sqlQuery, params, (error, results) => {
             if (error) {
