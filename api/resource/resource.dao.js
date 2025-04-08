@@ -3,12 +3,11 @@ const pool = require('../../config/database');
 module.exports = {
     createResource: (data, callBack) => {
         pool.query(
-            `INSERT into public.resource (category, acquired_by, amount, status, quantity,unit, description, created_by, acquired_date, created_date)
-                    values($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+            `INSERT into public.resource (category, acquired_by, status, quantity,unit, description, created_by, acquired_date, created_date)
+                    values($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
             [
                 data.category,
                 data.acquiredBy,
-                data.amount,
                 data.status,
                 data.quantity,
                 data.unit,
@@ -51,11 +50,10 @@ module.exports = {
     },
     update: (data, callBack) => {
         pool.query(
-            `UPDATE public.resource SET category = $1, acquired_by = $2, amount = $3, status = $4, description = $5, created_by = $6, acquired_date = $7, created_date = $8 WHERE id = $9`,
+            `UPDATE public.resource SET category = $1, acquired_by = $2, status = $3, description = $4, created_by = $5, acquired_date = $6, created_date = $7 WHERE id = $8`,
             [
                 data.category,
                 data.acquiredBy,
-                data.amount,
                 data.status,
                 data.description,
                 data.createdBy,
@@ -132,19 +130,19 @@ module.exports = {
         );
     },
     searchResourcesByCategory: (query, callBack) => {
-        let sqlQuery = `SELECT category, SUM(amount) FROM resource 
+        let sqlQuery = `SELECT category, SUM(quantity), unit FROM resource 
             WHERE resource.created_by = $1 
             AND acquired_date BETWEEN TO_DATE($2, 'YYYY-MM-DD') AND TO_DATE($3, 'YYYY-MM-DD')`;
 
         let params = [query.userName, query.fromDate, query.toDate];
 
-        if (query.category && query.categories.length > 0) {
+        if (query.categories && query.categories.length > 0) {
             const placeholders = query.categories.map((_, index) => `$${index + 4}`).join(', ');
             sqlQuery += ` AND category IN (${placeholders})`;
             params = params.concat(query.categories);
         }
 
-        sqlQuery += ` GROUP BY category;`;
+        sqlQuery += ` GROUP BY category, unit;`;
 
         console.log('params', params);
         console.log('quer', sqlQuery);
