@@ -106,6 +106,5 @@ module.exports = {
                 console.log("No file to upload");
             }
         console.log("Expense data:", expense);
-
     }
 }

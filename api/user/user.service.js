@@ -147,12 +147,14 @@ module.exports = {
                 });
             }
 
-            const result = compareSync(body.password, results.rows[0].password);
+            const user = results.rows[0];
+
+            const result = compareSync(body.password, user.password);
 
             if (result) {
                 results.rows[0].password = undefined;
 
-                const jsontoken = sign({ result: results.rows }, process.env.JWT_SECRET, {
+                const jsontoken = sign({ user: user }, process.env.JWT_SECRET, {
                     expiresIn: "1h"
                 });
                 return res.json({
