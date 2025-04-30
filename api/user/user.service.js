@@ -1,6 +1,6 @@
 const { create, getUsers, getUserById, deleteUser, updateUser, getUserByUserName, createUserLog, getUserLog, getUserLogByUserName} = require('./user.dao');
 const { genSaltSync, hashSync, compareSync } = require('bcrypt');
-const {sign} = require('jsonwebtoken')
+const { sign, verify } = require('jsonwebtoken');
 
 module.exports = {
     createUser: (req, res) => {
@@ -154,13 +154,19 @@ module.exports = {
             if (result) {
                 results.rows[0].password = undefined;
 
-                const jsontoken = sign({ user: user }, process.env.JWT_SECRET, {
-                    expiresIn: "1h"
+                const accessToken = sign({ user: user }, process.env.JWT_SECRET, {
+                    expiresIn: "15m"
                 });
+
+                const refreshToken = sign({ user: user }, process.env.JWT_REFRESH_SECRET, {
+                    expiresIn: "7d"
+                });
+
                 return res.json({
                     success: true,
                     message: "login successfully",
-                    authToken: jsontoken
+                    authToken: accessToken,
+                    refreshToken: refreshToken
                 });
             } else {
                 return res.status(401).json({
@@ -192,5 +198,35 @@ module.exports = {
                 response: results
             });
         });
+    },
+    regenerateToken: (req, res) => {
+        const { refreshToken } = req.body;
+
+        if (!refreshToken) {
+            return res.status(400).json({
+                success: 0,
+                message: "Refresh token is required"
+            });
+        }
+
+        try {
+            const decoded = verify(refreshToken, process.env.JWT_REFRESH_SECRET);
+
+            const newToken = sign({ user: decoded.user }, process.env.JWT_SECRET, {
+                expiresIn: "15m"
+            });
+
+            return res.json({
+                success: 1,
+                message: "Token regenerated successfully",
+                authToken: newToken
+            });
+        } catch (err) {
+            console.log(err);
+            return res.status(401).json({
+                success: 0,
+                message: "Invalid or expired refresh token"
+            });
+        }
     }
 };
