@@ -13,8 +13,15 @@ const uploadFileToS3 = require('./api/expense/aws/awsS3Controller');
 
 //const {verify} = require('./api/middleware/auth');
 
+const corsOptions = {
+  origin: ['http://localhost:4200', 'https://mezgeb-d01000e33d0f.herokuapp.com'], // Allow this specific origin
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+};
+
 app.use(express.json());
-app.use(cors()); // Ensure cors middleware is used
+app.use(cors(corsOptions)); // Apply CORS middleware
+app.options('*', cors(corsOptions)); // Handle preflight requests
 
 app.use("/users", userRouter);
 app.use("/expenses", expenseRouter);
