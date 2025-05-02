@@ -1,7 +1,6 @@
 require('dotenv').config();
-const { Pool } = require('pg');
 const express = require('express');
-const cors = require('cors'); // Ensure cors is imported
+const cors = require('cors');
 const app = express();
 
 const userRouter = require('./api/user/user.controller');
@@ -11,19 +10,16 @@ const resourceCategoryRouter = require('./api/resource_category/resource_categor
 const expenseCategoryRouter = require('./api/expense_category/expense_category.controller');
 const uploadFileToS3 = require('./api/expense/aws/awsS3Controller');
 
-//const {verify} = require('./api/middleware/auth');
-
-
 const corsOptions = {
-  origin: ['https://mezgeb-d01000e33d0f.herokuapp.com', 'http://localhost:4200'],
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  origin: ['https://mezgeb-d01000e33d0f.herokuapp.com', 'http://localhost:4200'], // Allow specific origins
+  credentials: true, // Allow cookies and credentials
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], // Allowed HTTP methods
+  allowedHeaders: ['Content-Type', 'Authorization'], // Allowed headers
 };
 
-app.use(express.json());
 app.use(cors(corsOptions)); // Apply CORS middleware
 app.options('*', cors(corsOptions)); // Handle preflight requests
+app.use(express.json()); // Parse JSON requests
 
 app.use("/users", userRouter);
 app.use("/expenses", expenseRouter);
@@ -31,7 +27,6 @@ app.use("/resources", resourceRouter);
 app.use("/resource_categories", resourceCategoryRouter);
 app.use("/expense_categories", expenseCategoryRouter);
 app.use("/file", uploadFileToS3);
-
 
 const port = process.env.PORT || 3000;
 
