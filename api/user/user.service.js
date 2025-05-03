@@ -136,44 +136,44 @@ module.exports = {
     }, 
     login: (req, res) => {
         const body = req.body;
+    
         getUserByUserName(body.userName, (err, results) => {
             if (err) {
-                console.log(err);
+                console.error("Login DB error:", err);
+                return res.status(500).json({
+                    success: false,
+                    message: "Internal server error"
+                });
             }
+    
             if (!results || results.rows.length === 0) {
                 return res.status(401).json({
                     success: false,
                     message: "Invalid email or password"
                 });
             }
-
+    
             const user = results.rows[0];
-
             const result = compareSync(body.password, user.password);
-
-            if (result) {
-                results.rows[0].password = undefined;
-
-                const accessToken = sign({ user: user }, process.env.JWT_SECRET, {
-                    expiresIn: "15m"
-                });
-
-                const refreshToken = sign({ user: user }, process.env.JWT_REFRESH_SECRET, {
-                    expiresIn: "7d"
-                });
-
-                return res.json({
-                    success: true,
-                    message: "login successfully",
-                    authToken: accessToken,
-                    refreshToken: refreshToken
-                });
-            } else {
+    
+            if (!result) {
                 return res.status(401).json({
                     success: false,
                     message: "Invalid email or password"
                 });
             }
+    
+            user.password = undefined;
+    
+            const accessToken = sign({ user }, process.env.JWT_SECRET, { expiresIn: "15m" });
+            const refreshToken = sign({ user }, process.env.JWT_REFRESH_SECRET, { expiresIn: "7d" });
+    
+            return res.json({
+                success: true,
+                message: "Login successfully",
+                authToken: accessToken,
+                refreshToken: refreshToken
+            });
         });
     },
     createUserLog: (req, res) => {
