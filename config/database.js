@@ -7,6 +7,7 @@ if (process.env.NODE_ENV === 'production') {
   pool = new Pool({
     connectionString: process.env.DATABASE_URL, // Use the database URL from environment variables
     ssl: {
+      require: true, // This will ensure that the SSL connection is required
       rejectUnauthorized: false, // Required for Heroku Postgres to allow self-signed certificates
     },
     max: 5, // set connection limit to 20
