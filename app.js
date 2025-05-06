@@ -28,8 +28,11 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use(cors(corsOptions)); // Apply CORS middleware
-app.options('*', cors(corsOptions)); // Handle preflight requests
+// app.use(cors(corsOptions)); // Apply CORS middleware
+// app.options('*', cors(corsOptions)); // Handle preflight requests
+
+app.use(cors()); // Apply CORS middleware
+
 app.use(express.json()); // Parse JSON requests
 
 app.use("/users", userRouter);
