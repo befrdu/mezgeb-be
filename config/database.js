@@ -4,9 +4,6 @@ require('dotenv').config();
 let pool;
 
 if (process.env.NODE_ENV === 'production') {
-  console.log('Connecting to production database in Heroku...');
-  console.log('DATABASE_URL:', process.env.DATABASE_URL);
-
   pool = new Pool({
     connectionString: process.env.DATABASE_URL,
     ssl: {

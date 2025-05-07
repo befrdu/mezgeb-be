@@ -17,21 +17,21 @@ const corsOptions = {
   allowedHeaders: ['Content-Type', 'Authorization'], // Allowed headers
 };
 
-app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Origin", req.headers.origin || '*'); // Dynamically set the origin
-  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
-  res.header("Access-Control-Allow-Credentials", "true");
-  if (req.method === 'OPTIONS') {
-    return res.sendStatus(204); // Respond to preflight requests
-  }
-  next();
-});
+// app.use((req, res, next) => {
+//   res.header("Access-Control-Allow-Origin", req.headers.origin || '*'); // Dynamically set the origin
+//   res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+//   res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+//   res.header("Access-Control-Allow-Credentials", "true");
+//   if (req.method === 'OPTIONS') {
+//     return res.sendStatus(204); // Respond to preflight requests
+//   }
+//   next();
+// });
 
-// app.use(cors(corsOptions)); // Apply CORS middleware
-// app.options('*', cors(corsOptions)); // Handle preflight requests
+app.use(cors(corsOptions)); // Apply CORS middleware
+app.options('*', cors(corsOptions)); // Handle preflight requests
 
-app.use(cors()); // Apply CORS middleware
+//app.use(cors()); // Apply CORS middleware
 
 app.use(express.json()); // Parse JSON requests
 
