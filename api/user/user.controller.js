@@ -1,11 +1,12 @@
 const express = require('express');
-const { createUser,getUsers, getUserById, login, createUserLog, regenerateToken} = require('./user.service');
+const { createUser,getUsers, getUserById, login, createUserLog, regenerateToken, logout} = require('./user.service');
 const router = express.Router();
 const {checkToken} = require('../../auth/token_validation');
 
 /* Public api */
 router.post('/login', login);
 router.post('/regenerate-token', regenerateToken);
+router.post('/logout', logout);
 /*----------------------------------------------------*/
 
 

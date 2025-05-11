@@ -168,11 +168,18 @@ module.exports = {
             const accessToken = sign({ user }, process.env.JWT_SECRET, { expiresIn: "15m" });
             const refreshToken = sign({ user }, process.env.JWT_REFRESH_SECRET, { expiresIn: "7d" });
     
+            // Set refreshToken in an HTTP-only cookie
+            res.cookie("refreshToken", refreshToken, {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === "production",
+                sameSite: "strict",
+                maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+            });
+    
             return res.json({
                 success: true,
                 message: "Login successfully",
-                authToken: accessToken,
-                refreshToken: refreshToken
+                authToken: accessToken
             });
         });
     },
@@ -200,7 +207,9 @@ module.exports = {
         });
     },
     regenerateToken: (req, res) => {
-        const { refreshToken } = req.body;
+        const refreshToken = req.cookies.refreshToken; // Retrieve refreshToken from cookie
+
+        console.log("Refresh token from cookie:", refreshToken);
 
         if (!refreshToken) {
             return res.status(400).json({
@@ -228,5 +237,36 @@ module.exports = {
                 message: "Invalid or expired refresh token"
             });
         }
-    }
+    },
+
+    logout: (req, res) => {
+        const data = req.body;
+
+        const jsonString = JSON.stringify(data.otherDetails);
+
+        data.otherDetails = jsonString;
+        data.activityDate = new Date();
+        createUserLog(data, (err, results) => {
+            if (err) {
+                console.log(err);
+                return res.status(500).json({
+                    success: 0,
+                    message: "Database connection error"
+                });
+            }
+            return res.status(200).json({
+                success: 1,
+                message: "User log created successfully",
+                response: results
+            });
+        });
+
+        // Clear the refresh token from the cookie
+        // Assuming you have a way to invalidate the refresh token on the server side
+        const token = req.cookies.refreshToken;
+        if (token) refreshTokens.delete(token);
+      
+        res.clearCookie('refreshToken');
+        res.sendStatus(204);
+    },
 };
