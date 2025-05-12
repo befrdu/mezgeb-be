@@ -275,7 +275,7 @@ module.exports = {
             res.cookie("refreshToken", tokens.refreshToken, {
                 httpOnly: true, // Prevent client-side JavaScript from accessing the cookie
                 secure: process.env.NODE_ENV === "production", // Use HTTPS in production
-                sameSite: "strict", // Prevent CSRF attacks
+                sameSite: "None", // Prevent CSRF attacks
                 maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days in milliseconds
             });
 
@@ -356,7 +356,7 @@ module.exports = {
             res.cookie("refreshToken", tokens.refreshToken, {
                 httpOnly: true,
                 secure: process.env.NODE_ENV === "production",
-                sameSite: "strict",
+                sameSite: "None",
                 maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
             });
 
