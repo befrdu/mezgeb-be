@@ -312,78 +312,55 @@ module.exports = {
     },
 
     regenerateToken: async (req, res) => {
-        const refreshToken = req.cookies?.refreshToken; // Safely access refreshToken
-
-        console.log("Refresh token from cookie:", refreshToken);
-
+        const refreshToken = req.cookies?.refreshToken;
+    
         if (!refreshToken) {
-            return res.status(403).json({ message: 'Refresh token invalid or missing' });
+            return res.status(403).json({ message: 'Refresh token missing' });
         }
-
+    
         try {
             const decoded = verify(refreshToken, process.env.JWT_REFRESH_SECRET);
-
-            console.log("Decoded refresh token:", decoded);
-
+            const userName = decoded.user.user_name;
+    
             const results = await new Promise((resolve, reject) => {
-                getUserLogInDetailsByUserName(decoded.user.user_name, (err, results) => {
-                    if (err) {
-                        return reject(err);
-                    }
-                    //resolve(results);
-                    if (results && results.rows.length > 0) {
-                        console.log("DB results", results);
-
-                        console.log("Refresh token from DB:", results.rows[0].r_token);
-            
-                        if (!results.rows[0].r_token || results.rows[0].r_token !== refreshToken) {
-                            return res.status(403).json({ message: 'Refresh token invalid' });
-                        }
-                    } else {
-                        resolve(null);
-                    }
+                getUserLogInDetailsByUserName(userName, (err, results) => {
+                    if (err) return reject(err);
+                    return resolve(results);
                 });
             });
-
+    
             if (!results || results.rows.length === 0) {
-                return res.status(404).json({
-                    success: 0,
-                    message: "Record not found"
-                });
+                return res.status(404).json({ message: 'User not found' });
             }
-
-            // const refreshTokenFromDB = results.rows[0].r_token;
-
-            // console.log("Refresh token from DB:", refreshTokenFromDB);
-
-            // if (!refreshTokenFromDB || refreshTokenFromDB !== refreshToken) {
-            //     return res.status(403).json({ message: 'Refresh token invalid' });
-            // }
-
+    
+            const refreshTokenFromDB = results.rows[0].r_token;
+    
+            if (!refreshTokenFromDB || refreshTokenFromDB !== refreshToken) {
+                return res.status(403).json({ message: 'Refresh token mismatch' });
+            }
+    
             const tokens = generateToken(decoded.user);
-
-            updateRefreshToken(decoded.user.user_name, tokens.refreshToken);
-
+            await updateRefreshToken(userName, tokens.refreshToken);
+    
             res.cookie("refreshToken", tokens.refreshToken, {
                 httpOnly: true,
                 secure: process.env.NODE_ENV === "production",
                 sameSite: "None",
-                maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+                maxAge: 7 * 24 * 60 * 60 * 1000
             });
-
+    
             return res.json({
                 success: 1,
                 message: "Token regenerated successfully",
                 authToken: tokens.accessToken,
             });
+    
         } catch (err) {
-            console.log(err);
-            return res.status(401).json({
-                success: 0,
-                message: "Invalid or expired refresh token"
-            });
+            console.error("Token verification failed:", err);
+            return res.status(401).json({ message: "Invalid or expired refresh token" });
         }
     },
+    
 
     logout: (req, res) => {
         const data = req.body;
