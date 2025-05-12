@@ -310,12 +310,12 @@ module.exports = {
     },
 
     regenerateToken: async (req, res) => {
-        const refreshToken = req.cookies.refreshToken; // Retrieve refreshToken from cookie
+        const refreshToken = req.cookies?.refreshToken; // Safely access refreshToken
 
         console.log("Refresh token from cookie:", refreshToken);
 
         if (!refreshToken) {
-            return res.status(403).json({ message: 'Refresh token invalid' });
+            return res.status(403).json({ message: 'Refresh token invalid or missing' });
         }
 
         try {
