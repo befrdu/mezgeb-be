@@ -1,6 +1,97 @@
-const { create, getUsers, getUserById, deleteUser, updateUser, getUserByUserName, createUserLog, getUserLog, getUserLogByUserName} = require('./user.dao');
+const { 
+    create, 
+    getUsers, 
+    getUserById, 
+    deleteUser, 
+    updateUser, 
+    getUserByUserName,
+    createUserLog, 
+    saveUserLogInDetails,
+    getUserLogInDetailsByUserName,
+    deleteUserLogInDetails,
+    updateUserLogInDetails
+} = require('./user.dao');
 const { genSaltSync, hashSync, compareSync } = require('bcrypt');
 const { sign, verify } = require('jsonwebtoken');
+
+// Private function to generate tokens
+const generateToken = (user) => {
+    user.password = undefined;
+
+    const accessToken = sign({ user }, process.env.JWT_SECRET, { expiresIn: "15m" });
+    const refreshToken = sign({ user }, process.env.JWT_REFRESH_SECRET, { expiresIn: "7d" });
+
+    console.log("Access Token and Refresh Token generated:");
+
+    return {
+        accessToken,
+        refreshToken
+    };
+};
+
+const updateRefreshToken = (userName, refreshToken) => {
+    const payload = {
+        userName: userName,
+        refreshToken: refreshToken
+    };
+
+    updateUserLogInDetails(payload, (err, results) => {
+        if (err) {
+            console.error("Error updating refresh token:", err);
+
+            throw new Error("Error updating refresh token", err);
+        }
+
+        console.log("Refresh token updated successfully for user:", userName);
+    });
+};
+
+const saveLogInDetails = (loginDetails) => {
+    console.log("retrieve login details by username:", loginDetails.userName);
+
+     getUserLogInDetailsByUserName(loginDetails.userName, (err, results) => {
+        if (err) {
+            console.error("Error fetching existing login details:", err);
+
+            throw new Error("Error fetching existing login details", err);
+        }
+
+        if (results && results.rows.length > 0) {
+            console.log("deleting existing record");
+
+            deleteUserLogInDetails(loginDetails.userName, (err, results) => {
+                if (err) {
+                    console.error("Error deleting existing login details:", err);
+
+                    throw new Error("Error deleting existing login details", err);
+                }
+            });
+        }
+    }
+    );
+
+    saveUserLogInDetails(loginDetails, (err, results) => {
+        if (err) {
+            console.error("Error saving login details:", err);
+
+            throw new Error("Error saving login details", err);
+        }
+
+        console.log("Refresh token saved successfully for user:", loginDetails.userName);
+    }); 
+};
+
+const buildLoginDetails = (userName, refreshToken, req) => {
+    return {
+        userName: userName,
+        refreshToken: refreshToken,
+        otherDetails: {
+            activity: "Login",
+            activityDate: new Date(),
+            ipAddress: req.ip
+        }
+    };
+};
 
 module.exports = {
     createUser: (req, res) => {
@@ -163,13 +254,23 @@ module.exports = {
                 });
             }
     
-            user.password = undefined;
-    
-            const accessToken = sign({ user }, process.env.JWT_SECRET, { expiresIn: "15m" });
-            const refreshToken = sign({ user }, process.env.JWT_REFRESH_SECRET, { expiresIn: "7d" });
-    
-            // Set refreshToken in an HTTP-only cookie
-            res.cookie("refreshToken", refreshToken, {
+           user.password = undefined;
+
+           const tokens = generateToken(user);
+
+           const loginDetails = buildLoginDetails(user.user_name, tokens.refreshToken, req);
+        
+           try {
+               saveLogInDetails(loginDetails);
+           } catch (error) {
+                console.error("Error saving login details:", error);
+                return res.status(500).json({
+                    success: false,
+                    message: "Internal server error"
+                });
+            }
+
+            res.cookie("refreshToken", tokens.refreshToken, {
                 httpOnly: true,
                 secure: process.env.NODE_ENV === "production",
                 sameSite: "strict",
@@ -179,10 +280,11 @@ module.exports = {
             return res.json({
                 success: true,
                 message: "Login successfully",
-                authToken: accessToken
+                authToken: tokens.accessToken
             });
         });
     },
+
     createUserLog: (req, res) => {
         const data = req.body;
 
@@ -206,29 +308,58 @@ module.exports = {
             });
         });
     },
-    regenerateToken: (req, res) => {
+
+    regenerateToken: async (req, res) => {
         const refreshToken = req.cookies.refreshToken; // Retrieve refreshToken from cookie
 
         console.log("Refresh token from cookie:", refreshToken);
 
         if (!refreshToken) {
-            return res.status(400).json({
-                success: 0,
-                message: "Refresh token is required"
-            });
+            return res.status(403).json({ message: 'Refresh token invalid' });
         }
 
         try {
             const decoded = verify(refreshToken, process.env.JWT_REFRESH_SECRET);
 
-            const newToken = sign({ user: decoded.user }, process.env.JWT_SECRET, {
-                expiresIn: "15m"
+            const results = await new Promise((resolve, reject) => {
+                getUserLogInDetailsByUserName(decoded.user.user_name, (err, results) => {
+                    if (err) {
+                        return reject(err);
+                    }
+                    resolve(results);
+                });
+            });
+
+            if (!results || results.rows.length === 0) {
+                return res.status(404).json({
+                    success: 0,
+                    message: "Record not found"
+                });
+            }
+
+            const refreshTokenFromDB = results.rows[0].r_token;
+
+            console.log("Refresh token from DB:", refreshTokenFromDB);
+
+            if (!refreshTokenFromDB || refreshTokenFromDB !== refreshToken) {
+                return res.status(403).json({ message: 'Refresh token invalid' });
+            }
+
+            const tokens = generateToken(decoded.user);
+
+            updateRefreshToken(decoded.user.user_name, tokens.refreshToken);
+
+            res.cookie("refreshToken", tokens.refreshToken, {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === "production",
+                sameSite: "strict",
+                maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
             });
 
             return res.json({
                 success: 1,
                 message: "Token regenerated successfully",
-                authToken: newToken
+                authToken: tokens.accessToken,
             });
         } catch (err) {
             console.log(err);

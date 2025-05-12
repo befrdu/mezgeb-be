@@ -132,6 +132,67 @@ module.exports = {
                 return callBack(null, results);
             }
         );
+    }, 
+    saveUserLogInDetails: (data, callBack) => {    
+        pool.query(
+            `INSERT INTO user_login_detail (user_name, r_roken, created_on, other_details)
+                    values($1, $2, $3, $4)`,
+            [
+                data.userName,
+                data.refreshToken,
+                new Date(),
+                data.otherDetails
+            ],
+            (error, results, fields) => {
+                if (error) {
+                    return callBack(error);
+                }
+                return callBack(null, results);
+            }
+        );
+    },
+
+    getUserLogInDetailsByUserName: (userName, callBack) => {
+        pool.query(
+            `select * from user_login_detail where user_name = $1`,
+            [userName],
+            (error, results, fields) => {
+                if (error) {
+                    return callBack(error);
+                }
+                return callBack(null, results);
+            }
+        );
+    },
+
+    deleteUserLogInDetails: (userName, callBack) => {
+        pool.query(
+            `delete from user_login_detail where user_name = $1`,
+            [userName],
+            (error, results, fields) => {
+                if (error) {
+                    return callBack(error);
+                }
+                return callBack(null, results);
+            }
+        );
+    },
+
+    updateUserLogInDetails: (data, callBack) => {
+        pool.query(
+            `update user_login_detail set r_token=$1, updated_on=$2 where user_name = $3`,
+            [
+                data.refreshToken,
+                new Date(),
+                data.userName
+            ],
+            (error, results, fields) => {
+                if (error) {
+                    return callBack(error);
+                }
+                return callBack(null, results);
+            }
+        );
     }
 };
 
