@@ -325,6 +325,8 @@ module.exports = {
         try {
             const decoded = verify(refreshToken, process.env.JWT_REFRESH_SECRET);
 
+            console.log("Decoded refresh token:", decoded);
+
             const results = await new Promise((resolve, reject) => {
                 getUserLogInDetailsByUserName(decoded.user.user_name, (err, results) => {
                     if (err) {
@@ -342,6 +344,8 @@ module.exports = {
             }
 
             const refreshTokenFromDB = results.rows[0].r_token;
+
+            console.log("Refresh token from DB:", refreshTokenFromDB);
 
             console.log("Refresh token from DB:", refreshTokenFromDB);
 
