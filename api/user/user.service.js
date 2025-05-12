@@ -334,11 +334,9 @@ module.exports = {
                     if (results && results.rows.length > 0) {
                         console.log("DB results", results);
 
-                        const refreshTokenFromDB = results.rows[0].r_token;
-
-                        console.log("Refresh token from DB:", refreshTokenFromDB);
+                        console.log("Refresh token from DB:", results.rows[0].r_token);
             
-                        if (!refreshTokenFromDB || refreshTokenFromDB !== refreshToken) {
+                        if (!results.rows[0].r_token || results.rows[0].r_token !== refreshToken) {
                             return res.status(403).json({ message: 'Refresh token invalid' });
                         }
                     } else {
