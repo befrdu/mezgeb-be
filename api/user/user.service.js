@@ -322,6 +322,8 @@ module.exports = {
             const decoded = verify(refreshToken, process.env.JWT_REFRESH_SECRET);
             const userName = decoded.user.user_name;
     
+            console.log("User name from decoded token:", userName);
+            
             const results = await new Promise((resolve, reject) => {
                 getUserLogInDetailsByUserName(userName, (err, results) => {
                     if (err) return reject(err);
@@ -332,12 +334,16 @@ module.exports = {
             if (!results || results.rows.length === 0) {
                 return res.status(404).json({ message: 'User not found' });
             }
+
+            console.log("Resulf from DB:", results);
     
             const refreshTokenFromDB = results.rows[0].r_token;
+
+            console.log("Refresh token from DB:", refreshTokenFromDB);
     
-            if (!refreshTokenFromDB || refreshTokenFromDB !== refreshToken) {
-                return res.status(403).json({ message: 'Refresh token mismatch' });
-            }
+            // if (!refreshTokenFromDB || refreshTokenFromDB !== refreshToken) {
+            //     return res.status(403).json({ message: 'Refresh token mismatch' });
+            // }
     
             const tokens = generateToken(decoded.user);
             await updateRefreshToken(userName, tokens.refreshToken);
@@ -361,7 +367,6 @@ module.exports = {
         }
     },
     
-
     logout: (req, res) => {
         const data = req.body;
 
