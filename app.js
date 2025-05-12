@@ -1,6 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const cookieParser = require('cookie-parser');
 const app = express();
 
 const userRouter = require('./api/user/user.controller');
@@ -34,6 +35,7 @@ app.options('*', cors(corsOptions)); // Handle preflight requests
 //app.use(cors()); // Apply CORS middleware
 
 app.use(express.json()); // Parse JSON requests
+app.use(cookieParser()); // Add this line to parse cookies
 
 app.use("/users", userRouter);
 app.use("/expenses", expenseRouter);

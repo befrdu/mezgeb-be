@@ -227,6 +227,8 @@ module.exports = {
     }, 
     login: (req, res) => {
         const body = req.body;
+
+        console.log("process.env.NODE_ENV = ", process.env.NODE_ENV);
     
         getUserByUserName(body.userName, (err, results) => {
             if (err) {
@@ -271,12 +273,12 @@ module.exports = {
             }
 
             res.cookie("refreshToken", tokens.refreshToken, {
-                httpOnly: true,
-                secure: process.env.NODE_ENV === "production",
-                sameSite: "strict",
-                maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+                httpOnly: true, // Prevent client-side JavaScript from accessing the cookie
+                secure: process.env.NODE_ENV === "production", // Use HTTPS in production
+                sameSite: "strict", // Prevent CSRF attacks
+                maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days in milliseconds
             });
-    
+
             return res.json({
                 success: true,
                 message: "Login successfully",
@@ -311,6 +313,8 @@ module.exports = {
 
     regenerateToken: async (req, res) => {
         const refreshToken = req.cookies?.refreshToken; // Safely access refreshToken
+
+        console.log("Regenerate token called and req.cookie is :", req.cookies);
 
         console.log("Refresh token from cookie:", refreshToken);
 
