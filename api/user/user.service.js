@@ -332,7 +332,18 @@ module.exports = {
                     if (err) {
                         return reject(err);
                     }
-                    resolve(results);
+                    //resolve(results);
+                    if (results && results.rows.length > 0) {
+                        const refreshTokenFromDB = results.rows[0].r_token;
+
+                        console.log("Refresh token from DB:", refreshTokenFromDB);
+            
+                        if (!refreshTokenFromDB || refreshTokenFromDB !== refreshToken) {
+                            return res.status(403).json({ message: 'Refresh token invalid' });
+                        }
+                    } else {
+                        resolve(null);
+                    }
                 });
             });
 
@@ -343,15 +354,13 @@ module.exports = {
                 });
             }
 
-            const refreshTokenFromDB = results.rows[0].r_token;
+            // const refreshTokenFromDB = results.rows[0].r_token;
 
-            console.log("Refresh token from DB:", refreshTokenFromDB);
+            // console.log("Refresh token from DB:", refreshTokenFromDB);
 
-            console.log("Refresh token from DB:", refreshTokenFromDB);
-
-            if (!refreshTokenFromDB || refreshTokenFromDB !== refreshToken) {
-                return res.status(403).json({ message: 'Refresh token invalid' });
-            }
+            // if (!refreshTokenFromDB || refreshTokenFromDB !== refreshToken) {
+            //     return res.status(403).json({ message: 'Refresh token invalid' });
+            // }
 
             const tokens = generateToken(decoded.user);
 
