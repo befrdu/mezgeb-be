@@ -314,8 +314,6 @@ module.exports = {
     regenerateToken: async (req, res) => {
         const refreshToken = req.cookies?.refreshToken; // Safely access refreshToken
 
-        console.log("Regenerate token called and req.cookie is :", req.cookies);
-
         console.log("Refresh token from cookie:", refreshToken);
 
         if (!refreshToken) {
@@ -334,6 +332,8 @@ module.exports = {
                     }
                     //resolve(results);
                     if (results && results.rows.length > 0) {
+                        console.log("DB results", results);
+
                         const refreshTokenFromDB = results.rows[0].r_token;
 
                         console.log("Refresh token from DB:", refreshTokenFromDB);
