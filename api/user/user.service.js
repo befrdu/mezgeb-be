@@ -126,6 +126,18 @@ const getRefreshTokenFromDB = (userName) => {
     });
 }
 
+const saveUserLog = (userLog) => {
+    createUserLog(userLog, (err, results) => {
+        if (err) {
+            console.error("Error creating user log:", err);
+            return res.status(500).json({
+                success: false,
+                message: "Internal server error"
+            });
+        }
+        console.log("User log created successfully");
+    });
+}
 // User CRUD operations
 module.exports = {
     createUser: (req, res) => {
@@ -294,19 +306,16 @@ module.exports = {
 
            const tokens = generateToken(user);
 
-           const loginDetails = buildLoginDetails(user.user_name, tokens.refreshToken, req);
-        
-           try {
-               saveLogInDetails(loginDetails);
-           } catch (error) {
-                console.error("Error saving login details:", error);
-                return res.status(500).json({
-                    success: false,
-                    message: "Internal server error"
-                });
-            }
+           const userLog = {
+            userName: user.user_name,
+            activity: "LOGIN",
+            activityDate: new Date(),
+            activityDetails: "{}",
+          };
 
-            return setTokenAndReturn(res, tokens.refreshToken, tokens.accessToken);
+        saveUserLog(userLog);
+          
+        return setTokenAndReturn(res, tokens.refreshToken, tokens.accessToken);
             
         });
     },
@@ -329,14 +338,11 @@ module.exports = {
 
             console.log("Refresh token from DB:", refreshTokenFromDB);
 
-            if (!refreshTokenFromDB || refreshTokenFromDB !== refreshToken) {
-                return res.status(403).json({ message: 'Refresh token mismatch' });
-            }
+            // if (!refreshTokenFromDB || refreshTokenFromDB !== refreshToken) {
+            //     return res.status(403).json({ message: 'Refresh token mismatch' });
+            // }
 
             const tokens = generateToken(decoded.user);
-
-            // Await the update operation to ensure it completes before proceeding
-            await updateRefreshToken(userName, tokens.refreshToken);
 
             return setTokenAndReturn(res, tokens.refreshToken, tokens.accessToken);
 
@@ -346,27 +352,19 @@ module.exports = {
         }
     },
     logout: (req, res) => {
+        console.log("Logout request received");
+
         const data = req.body;
 
-        const jsonString = JSON.stringify(data.otherDetails);
+        const userLog = {
+            userName: user.user_name,
+            activity: "LOGOUT",
+            activityDate: new Date(),
+            activityDetails: "{}",
+          };    
 
-        data.otherDetails = jsonString;
-        data.activityDate = new Date();
-        createUserLog(data, (err, results) => {
-            if (err) {
-                console.log(err);
-                return res.status(500).json({
-                    success: 0,
-                    message: "Database connection error"
-                });
-            }
-            return res.status(200).json({
-                success: 1,
-                message: "User log created successfully",
-                response: results
-            });
-        });
-
+        saveUserLog(userLog);
+  
         // Clear the refresh token from the cookie
         // Assuming you have a way to invalidate the refresh token on the server side
         const token = req.cookies.refreshToken;
@@ -374,6 +372,8 @@ module.exports = {
       
         res.clearCookie('refreshToken');
         res.sendStatus(204);
+
+        console.log("User logged out successfully");
     },
 
     // User activity logging
