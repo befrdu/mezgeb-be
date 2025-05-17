@@ -82,6 +82,7 @@ const saveLogInDetails = async (loginDetails) => {
 };
 
 const setTokenAndReturn = (res, refreshToken, accessToken) => {
+    console.log("Setting refresh token in cookie");
     res.cookie("refreshToken", refreshToken, {
         httpOnly: true, // Prevent client-side JavaScript from accessing the cookie
         secure: process.env.NODE_ENV === "production", // Use HTTPS in production
@@ -332,17 +333,15 @@ module.exports = {
 
             console.log("User name from decoded token:", userName);
 
-            // Await the result of the asynchronous database call
-            const results = await getRefreshTokenFromDB(userName);
-            const refreshTokenFromDB = results?.rows[0]?.r_roken;
-
-            console.log("Refresh token from DB:", refreshTokenFromDB);
+            const refreshTokenFromDB = await getRefreshTokenFromDB(userName);
 
             // if (!refreshTokenFromDB || refreshTokenFromDB !== refreshToken) {
             //     return res.status(403).json({ message: 'Refresh token mismatch' });
             // }
 
             const tokens = generateToken(decoded.user);
+
+            console.log("tokens", tokens);
 
             return setTokenAndReturn(res, tokens.refreshToken, tokens.accessToken);
 
