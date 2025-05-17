@@ -333,7 +333,7 @@ module.exports = {
 
             console.log("User name from decoded token:", userName);
 
-            const refreshTokenFromDB = await getRefreshTokenFromDB(userName);
+            //const refreshTokenFromDB = await getRefreshTokenFromDB(userName);
 
             // if (!refreshTokenFromDB || refreshTokenFromDB !== refreshToken) {
             //     return res.status(403).json({ message: 'Refresh token mismatch' });
