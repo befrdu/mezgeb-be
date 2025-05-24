@@ -200,7 +200,7 @@ module.exports = {
             }
             return res.json({
                 success: 1,
-                result: results.rows
+                data: results.rows
             });
         });
     },

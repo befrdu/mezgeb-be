@@ -25,7 +25,7 @@ module.exports = {
     },
     getUsers: callBack => {
         pool.query(
-            `select * from "user"`,
+            `select user_name as "userName", concat(first_name,' ', last_name) as "displayName" from "user" u ;`,
             [],
             (error, results, fields) => {
                 if (error) {

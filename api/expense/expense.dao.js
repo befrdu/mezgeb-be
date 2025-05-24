@@ -61,23 +61,55 @@ module.exports = {
         });
     },
     searchExpensesByDate: (query, callBack) => {
+       // Step 1: Retrieve user by userName from the user table
+       const userQuery = `SELECT * FROM  "user" u WHERE user_name = $1`;
+       pool.query(userQuery, [query.userName], (userError, userResults) => {
+        if (userError) {
+            return callBack(userError);
+        }
+
+        const user = userResults.rows[0];
+
+        let userType = user.user_type ? user.user_type.toLowerCase() : '';
+        let status = user.status ? user.status.toLowerCase() : '';
+
+        // Step 2: If user does not exist or is not active, return an empty result
+        if (!user || !user.status || status !== 'active') {
+            return callBack(null, []);
+        }
+
+        // Step 3: If user exists and is not admin, filter data by userName
         let sqlQuery = `SELECT * FROM payment 
-                        WHERE payment_date BETWEEN to_date($1, 'YYYY-MM-DD') AND to_date($2, 'YYYY-MM-DD')
-                        AND created_by = $3`;
+                        WHERE payment_date BETWEEN to_date($1, 'YYYY-MM-DD') AND to_date($2, 'YYYY-MM-DD')`;
+                     
+        let params = [query.fromDate, query.toDate];
 
-        let params = [query.fromDate, query.toDate, query.userName];
+        if (userType !== 'admin') {
+            sqlQuery += ` AND created_by = $3`;
+            params.push(query.userName);
+        } else {
+            // Step 4: If user is admin, filter by userList if provided
+            if (userType === 'admin'&& query.users && query.users.length > 0) {
+                const userListPlaceholder = query.users.map((_, index) => `$${index + 3}`).join(', ');
+                sqlQuery += ` AND created_by IN (${userListPlaceholder})`;
+                params = [...params, ...query.users];
+            }
+        }
 
+        // Add category filter if provided
         if (query.categories && query.categories.length > 0) {
-            let categoriesPlaceholder = query.categories.map((_, index) => `$${index + 4}`).join(', ');
+            const categoriesPlaceholder = query.categories.map((_, index) => `$${params.length + index + 1}`).join(', ');
             sqlQuery += ` AND category IN (${categoriesPlaceholder})`;
             params = [...params, ...query.categories];
         }
 
+        // Execute the final query
         pool.query(sqlQuery, params, (error, results) => {
             if (error) {
                 return callBack(error);
             }
             return callBack(null, results.rows);
         });
+    });
     }
 }
