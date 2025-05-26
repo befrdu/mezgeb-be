@@ -34,32 +34,58 @@ module.exports = {
         );
     },
     searchExpensesByCategory: (query, callBack) => {
-        console.log(query);
-
-        let placeholders = query.categories.map((_, index) => `$${index + 1}`).join(', ');
-
-        let sqlQuery = `SELECT category, SUM(amount) FROM payment 
-                        WHERE category IN (${placeholders}) 
-                        AND created_by = $${query.categories.length + 1} 
-                        AND payment_date BETWEEN to_date($${query.categories.length + 2}, 'YYYY-MM-DD') 
-                        AND to_date($${query.categories.length + 3}, 'YYYY-MM-DD') 
-                        GROUP BY category;`;
-
-        console.log('query', sqlQuery) ;              
-
-        let params = [...query.categories, query.userName, query.fromDate, query.toDate];
-
-        console.log('params', params);
-
-        pool.query(sqlQuery, params, (error, results) => {
-            if (error) {
-                return callBack(error);
+        // Step 1: Retrieve user by userName from the user table
+        const userQuery = `SELECT * FROM "user" u WHERE user_name = $1`;
+        pool.query(userQuery, [query.userName], (userError, userResults) => {
+            if (userError) {
+                return callBack(userError);
             }
-            console.log('result', results);
-            
-            return callBack(null, results.rows);
+
+            const user = userResults.rows[0];
+
+            let userType = user?.user_type?.toLowerCase() || '';
+            let status = user?.status?.toLowerCase() || '';
+
+            // Step 2: If user does not exist or is not active, return an empty result
+            if (!user || status !== 'active') {
+                return callBack(null, []);
+            }
+
+            // Step 3: Construct the base query
+            let sqlQuery = `SELECT category, SUM(amount) FROM payment 
+                            WHERE payment_date BETWEEN to_date($1, 'YYYY-MM-DD') 
+                            AND to_date($2, 'YYYY-MM-DD')`;
+            let params = [query.fromDate, query.toDate];
+
+            // Step 4: Apply filters based on user type
+           if (userType === 'admin'&&query.users && query.users.length > 0) {
+                const userListPlaceholder = query.users.map((_, index) => `$${params.length + index + 1}`).join(', ');
+                sqlQuery += ` AND created_by IN (${userListPlaceholder})`;
+                params = [...params, ...query.users];
+            }else { 
+                sqlQuery += ` AND created_by = $3`;
+                params.push(query.userName);
+            }
+
+            // Add category filter if provided
+            if (query.categories && query.categories.length > 0) {
+                const categoriesPlaceholder = query.categories.map((_, index) => `$${params.length + index + 1}`).join(', ');
+                sqlQuery += ` AND category IN (${categoriesPlaceholder})`;
+                params = [...params, ...query.categories];
+            }
+
+            sqlQuery += ` GROUP BY category;`;
+
+            // Execute the final query
+            pool.query(sqlQuery, params, (error, results) => {
+                if (error) {
+                    return callBack(error);
+                }
+                return callBack(null, results.rows);
+            });
         });
     },
+    
     searchExpensesByDate: (query, callBack) => {
        // Step 1: Retrieve user by userName from the user table
        const userQuery = `SELECT * FROM  "user" u WHERE user_name = $1`;

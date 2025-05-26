@@ -142,10 +142,7 @@ module.exports = {
             params = params.concat(query.categories);
         }
 
-        sqlQuery += ` GROUP BY category, unit;`;
-
-        console.log('params', params);
-        console.log('quer', sqlQuery);
+        sqlQuery += ` GROUP BY category, unit;`
 
         pool.query(sqlQuery, params, (error, results) => {
             if (error) {
