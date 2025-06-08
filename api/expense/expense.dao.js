@@ -143,29 +143,60 @@ module.exports = {
     updateExpenseById: (data, callBack) => {     
         const updatedDate = new Date();
 
-        let sqlQuery =   `UPDATE payment SET category = $1, payment_method = $2, amount = $3, payed_to = $4, 
-             payment_date = $5, updated_by = $6, description = $7, updated_on = $8
-             WHERE id = $9`
+        const updates = [];
+        const params = [];
 
-         let params = [
-            data.category,
-            data.paymentMethod,
-            data.amount,
-            data.payedTo,
-            data.date,
-            data.updatedBy,
-            data.description,
-            updatedDate,
-            data.id
-        ];  
+      
+            updates.push('category = $' + (params.length + 1));
+            params.push(data.category);
+      
+            updates.push('payment_method = $' + (params.length + 1));
+            params.push(data.paymentMethod);
+
+            updates.push('amount = $' + (params.length + 1));
+            params.push(data.amount);
+
+            updates.push('payed_to = $' + (params.length + 1));
+            params.push(data.payedTo);
+     
+            updates.push('payment_date = $' + (params.length + 1));
+            params.push(data.date);
+
+            updates.push('description = $' + (params.length + 1));
+            params.push(data.description);
+           
+            updates.push('updated_by = $' + (params.length + 1));
+            params.push(data.updatedBy);
         
-        pool.query(sqlQuery,params,(error, results) => {
-                if (error) {
-                    return callBack(error);
-                }
-                return callBack(null, results);
+        if (data.receiptUrl != null && data.receiptFileSize != null && data.receiptFileSize >0) {
+            updates.push('receipt_file_url = $' + (params.length + 1));
+            params.push(data.receiptUrl);
+
+            updates.push('receipt_file_name = $' + (params.length + 1));
+            params.push(data.receiptFileName);
+
+            updates.push('receipt_file_size = $' + (params.length + 1));
+            params.push(data.receiptFileSize);
+
+            updates.push('receipt_file_type = $' + (params.length + 1));
+            params.push(data.receiptFileType);
+
+            updates.push('receipt_file_key = $' + (params.length + 1));
+            params.push(data.receiptFileUniqueKey);
+        }
+
+        updates.push('updated_on = $' + (params.length + 1));
+        params.push(updatedDate);
+        params.push(data.id);
+
+        const sqlQuery = `UPDATE payment SET ${updates.join(', ')} WHERE id = $${params.length}`;
+
+        pool.query(sqlQuery, params, (error, results) => {
+            if (error) {
+                return callBack(error);
             }
-        );
+            return callBack(null, results);
+        });
     },
 
     deleteExpenseById: (id, callBack) => {
