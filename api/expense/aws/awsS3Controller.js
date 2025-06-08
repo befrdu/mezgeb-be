@@ -17,7 +17,7 @@ const upload = multer({ storage: storage });
      
      console.log(`File originalName for testing: ${fileName}`);
 
-     if (!file && fileUniqueKey) {
+     if (!file || !fileUniqueKey) {
          return res.status(400).send('No file uploaded. Either file or fileUniqueKey is missing.');
      }
      

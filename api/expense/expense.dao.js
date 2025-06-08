@@ -33,6 +33,7 @@ module.exports = {
             }
         );
     },
+    
     searchExpensesByCategory: (query, callBack) => {
         // Step 1: Retrieve user by userName from the user table
         const userQuery = `SELECT * FROM "user" u WHERE user_name = $1`;
@@ -85,7 +86,7 @@ module.exports = {
             });
         });
     },
-    
+
     searchExpensesByDate: (query, callBack) => {
        // Step 1: Retrieve user by userName from the user table
        const userQuery = `SELECT * FROM  "user" u WHERE user_name = $1`;
@@ -137,5 +138,46 @@ module.exports = {
             return callBack(null, results.rows);
         });
     });
+    },
+
+    updateExpenseById: (data, callBack) => {     
+        const updatedDate = new Date();
+
+        let sqlQuery =   `UPDATE payment SET category = $1, payment_method = $2, amount = $3, payed_to = $4, 
+             payment_date = $5, updated_by = $6, description = $7, updated_on = $8
+             WHERE id = $9`
+
+         let params = [
+            data.category,
+            data.paymentMethod,
+            data.amount,
+            data.payedTo,
+            data.date,
+            data.updatedBy,
+            data.description,
+            updatedDate,
+            data.id
+        ];  
+        
+        pool.query(sqlQuery,params,(error, results) => {
+                if (error) {
+                    return callBack(error);
+                }
+                return callBack(null, results);
+            }
+        );
+    },
+
+    deleteExpenseById: (id, callBack) => {
+        pool.query(
+            `DELETE FROM payment WHERE id = $1`,
+            [id],
+            (error, results) => {
+                if (error) {
+                    return callBack(error);
+                }
+                return callBack(null, results);
+            }
+        );
     }
 }

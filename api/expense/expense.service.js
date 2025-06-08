@@ -1,4 +1,4 @@
-const { createExpense, searchExpensesByCategory, searchExpensesByDate } = require('./expense.dao');
+const { createExpense, searchExpensesByCategory, searchExpensesByDate, updateExpenseById, deleteExpenseById } = require('./expense.dao');
 
 module.exports = {
     createExpense: (req, res) => {
@@ -106,5 +106,42 @@ module.exports = {
                 console.log("No file to upload");
             }
         console.log("Expense data:", expense);
-    }
+    },
+
+    updateExpenseById: (req, res) => {
+        const data = req.body;
+
+        updateExpenseById(data, (err, results) => {
+            if (err) {
+                console.log(err);
+                return res.status(500).json({
+                    success: 0,
+                    message: "Database connection error"
+                });
+            }
+            return res.status(200).json({
+                success: 1,
+                message: "Expense updated successfully"
+            });
+        });
+    },
+
+   deleteExpense: (req, res) => {   
+        const id = req.body.id;
+        console.log("Received request to delete expense with ID:", id);
+
+        deleteExpenseById(id, (err, results) => {
+            if (err) {
+                console.log(err);
+                return res.status(500).json({
+                    success: 0,
+                    message: "Database connection error"
+                });
+            }
+            return res.status(200).json({
+                success: 1,
+                message: "Expense deleted successfully"
+            });
+        });
+    }        
 }
