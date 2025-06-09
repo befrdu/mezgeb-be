@@ -49,18 +49,24 @@ module.exports = {
         );
     },
     update: (data, callBack) => {
+        let sqlQuery = `UPDATE public.resource SET category = $1, acquired_by = $2, status = $3, description = $4,
+                         updated_by = $5, acquired_date = $6, updated_date = $7, quantity=$8, unit=$9 WHERE id = $10`;
+        let params = [
+            data.category,
+            data.acquiredBy,
+            data.status,
+            data.description,       
+            data.updatedBy,
+            data.acquiredDate,
+            new Date(),
+            data.quantity,
+            data.unit,
+            data.id
+        ];
+
         pool.query(
-            `UPDATE public.resource SET category = $1, acquired_by = $2, status = $3, description = $4, created_by = $5, acquired_date = $6, created_date = $7 WHERE id = $8`,
-            [
-                data.category,
-                data.acquiredBy,
-                data.status,
-                data.description,
-                data.createdBy,
-                data.acquiredDate,
-                data.createdDate,
-                data.id
-            ],
+            sqlQuery,
+            params,
             (error, results, fields) => {
                 if (error) {
                     return callBack(error);

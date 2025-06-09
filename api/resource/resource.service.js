@@ -98,9 +98,7 @@ module.exports = {
     },
     updateResource: (req, res) => {
         const body = req.body;
-        const id = req.params.id;
-
-        body.id = id;
+        console.log("request body", req.body);
 
         update(body, (err, results) => {
             if (err) {
@@ -117,7 +115,7 @@ module.exports = {
         });
     },
     deleteResource: (req, res) => {
-        const id = req.params.id;
+        const id = req.body.id;
 
         deleteResource(id, (err, results) => {
             if (err) {

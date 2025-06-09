@@ -27,8 +27,8 @@ router.post('/by-category', checkToken, getResourcesByCategory);
 router.post('/by-status', checkToken, getResourcesByStatus);
 router.post('/by-acquired-by', checkToken, getResourcesByAcquiredBy);
 router.post('/by-created-by', checkToken, getResourcesByCreatedBy);
-router.patch('/:id', checkToken, updateResource);
-router.delete('/:id', checkToken, deleteResource);
+router.post('/update', checkToken, updateResource);
+router.post('/delete', checkToken, deleteResource);
 
 /*----------------------------------------------------*/
 
