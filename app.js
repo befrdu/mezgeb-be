@@ -10,6 +10,8 @@ const resourceRouter = require('./api/resource/resource.controller');
 const resourceCategoryRouter = require('./api/resource_category/resource_category.controller');
 const expenseCategoryRouter = require('./api/expense_category/expense_category.controller');
 const uploadFileToS3 = require('./api/expense/aws/awsS3Controller');
+const cashMoneyRouter = require('./api/cash_money/cash.controller');
+const bankAccountRouter = require('./api/bank/bank.controller');
 
 const corsOptions = {
   origin: ['https://mezgeb-d01000e33d0f.herokuapp.com', 'http://localhost:4200'], // Allow specific origins
@@ -30,6 +32,8 @@ app.use("/resources", resourceRouter);
 app.use("/resource_categories", resourceCategoryRouter);
 app.use("/expense_categories", expenseCategoryRouter);
 app.use("/file", uploadFileToS3);
+app.use("/cash_money", cashMoneyRouter);
+app.use("/bank_account", bankAccountRouter);
 
 const port = process.env.PORT || 3000;
 
